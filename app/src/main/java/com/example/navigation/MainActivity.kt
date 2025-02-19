@@ -4,9 +4,9 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.DropdownMenu
@@ -26,7 +26,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
 import com.example.navigation.ui.theme.NavigationTheme
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
 
 class MainActivity : ComponentActivity() {
     @OptIn(ExperimentalMaterial3Api::class)
@@ -35,70 +39,118 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             NavigationTheme {
-                Scaffold(
-                    topBar = {
-                        var expanded by remember { mutableStateOf(false) }
-                        TopAppBar(
-                            colors = TopAppBarDefaults.topAppBarColors(
-                                containerColor =
-                                MaterialTheme.colorScheme.primaryContainer,
-                                titleContentColor = MaterialTheme.colorScheme.primary,
-                            ),
-                            title = {
-                                Text(text = "My app")
-                            },
-                            navigationIcon = {
-                                IconButton(onClick = { /* do something */ }) {
-                                    Icon(
-                                        imageVector = Icons.Filled.Menu,
-                                        contentDescription = "Localized description"
-                                    )
-                                }
-                            },
-                            actions = {
-                                IconButton(onClick = { expanded =!expanded }) {
-                                    Icon(
-                                        imageVector = Icons.Filled.MoreVert,
-                                        contentDescription = "Localized description"
-                                    )
-                                }
-                                DropdownMenu(
-                                    expanded = expanded,
-                                    onDismissRequest = { expanded = false }
-                                ) {
-                                    DropdownMenuItem(
-                                        text = { Text("Info") },
-                                        onClick = { /* Do something... */ }
-                                    )
-                                    DropdownMenuItem(
-                                        text = { Text("Settings") },
-                                        onClick = { /* Do something... */ }
-                                    )
-                                }
-                            },
-
-                            )
-                    }
-                ) { innerPadding ->
-                    Greeting("Android", modifier = Modifier.padding(innerPadding))
-                }
+                ScaffoldApp()
             }
         }
     }
 }
 
+
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun Greeting(name: String, modifier: Modifier = Modifier) {
-    Text(
-        text = "Hello $name!",
-        modifier = modifier
+fun ScreenTopBar(title: String, navController: NavController) {
+    TopAppBar(
+        colors = TopAppBarDefaults.topAppBarColors(
+            containerColor = MaterialTheme.colorScheme.primaryContainer,
+            titleContentColor = MaterialTheme.colorScheme.primary,
+        ),
+        title = {
+            Text(text = title)
+        },
+        navigationIcon = {
+            IconButton(onClick = { navController.navigateUp() }) {
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                    contentDescription = "Back"
+                )
+            }
+        },
     )
 }
 
-@Preview(showBackground = true)
+
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun GreetingPreview() {
-    NavigationTheme {
-        Greeting("Android")
+fun MainTopAppBar(title: String, navController: NavController) {
+    var expanded by remember { mutableStateOf(false) }
+    TopAppBar(
+        colors = TopAppBarDefaults.topAppBarColors(
+            containerColor = MaterialTheme.colorScheme.primaryContainer,
+            titleContentColor = MaterialTheme.colorScheme.primary,
+        ),
+
+
+
+        title = {
+            Text(text = title)
+        },
+        navigationIcon = {
+            IconButton(onClick = { /* do something */ }) {
+                Icon(
+                    imageVector = Icons.Filled.Menu,
+                    contentDescription = "Open menu"
+                )
+            }
+        },
+        actions = {
+            IconButton(onClick = { expanded =!expanded }) {
+                Icon(
+                    imageVector = Icons.Filled.MoreVert,
+                    contentDescription = "Open submenu"
+                )
+            }
+            DropdownMenu(
+                expanded = expanded,
+                onDismissRequest = { expanded = false }
+            ) {
+                DropdownMenuItem(
+                    text = { Text("Info") },
+                    onClick = { navController.navigate("info") }
+                )
+                DropdownMenuItem(
+                    text = { Text("Settings") },
+                    onClick = { navController.navigate("settings")}
+                )
+            }
+        },
+    )
+}
+
+@Composable
+fun MainScreen(navController: NavController) {
+    Scaffold(
+        topBar = { MainTopAppBar("My app", navController) },
+    ) { innerPadding ->
+        Text(text = "Home Screen", modifier = Modifier.padding(innerPadding))
     }
 }
+
+@Composable
+fun InfoScreen(navController: NavController) {Scaffold(
+    topBar = { ScreenTopBar("Info",navController) },
+) { innerPadding ->
+    Text(text="Info Screen",modifier = Modifier.padding(innerPadding))
+}
+}
+@Composable
+fun SettingsScreen(navController: NavController) {
+    Scaffold(
+        topBar = { ScreenTopBar("Settings",navController) },
+    ) { innerPadding ->
+        Text(text="Settings Screen",modifier = Modifier.padding(innerPadding))
+    }
+}
+
+@Composable
+fun ScaffoldApp() {
+    val navController = rememberNavController()
+    NavHost(
+        navController = navController,
+        startDestination = "home"
+    ) {
+        composable(route = "home") { MainScreen(navController) }
+        composable(route = "info") { InfoScreen(navController) }
+        composable(route = "settings") { SettingsScreen(navController) }
+    }
+}
+
